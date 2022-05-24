@@ -1,6 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 const re = /\{\{\w+\}\}/gi;
+const FSP = require('fs').promises;
 //const fse = require('fs-extra');
 //const re = /header/gi;
 let components = {};
@@ -85,20 +86,18 @@ function copy(from, to) {
 }
 
 //copy(path.join(__dirname,"assets"), path.join(__dirname,"project-dist", "assets"));
-//fse.copySync(path.join(__dirname,"assets"),path.join(__dirname,"project-dist", "assets"));
-var copyRecursiveSync = function(src, dest) {
-  var exists = fs.existsSync(src);
-  var stats = exists && fs.statSync(src);
-  var isDirectory = exists && stats.isDirectory();
-  if (isDirectory) {
-    fs.mkdirSync(dest,{recursive: true});
-    fs.readdirSync(src).forEach(function(childItemName) {
-      copyRecursiveSync(path.join(src, childItemName),
-                        path.join(dest, childItemName));
-    });
-  } else {
-    fs.copyFileSync(src, dest);
-  }
-};
-//replace();
-copyRecursiveSync(path.join(__dirname,"assets"),path.join(__dirname,"project-dist", "assets"));
+
+async function copyDir(src,dest) {
+    const entries = await FSP.readdir(src, {withFileTypes: true});
+    await FSP.mkdir(dest, {recursive: true});
+    for(let entry of entries) {
+        const srcPath = path.join(src, entry.name);
+        const destPath = path.join(dest, entry.name);
+        if(entry.isDirectory()) {
+            await copyDir(srcPath, destPath);
+        } else {
+            await FSP.copyFile(srcPath, destPath);
+        }
+    }
+}
+copyDir(path.join(__dirname,"assets"),path.join(__dirname,"project-dist", "assets"));
