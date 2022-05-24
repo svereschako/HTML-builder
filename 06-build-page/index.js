@@ -57,8 +57,8 @@ fs.readdir(path.join(__dirname, "styles"), {withFileTypes: true}, (err, files) =
 	fs.readdir(from, {withFileTypes: true}, (err, files) => {		
 		files.forEach(file => {			
 			if(file.isDirectory()){
-				fs.mkdirSync(to, {recursive: true});
-				fs.readdirSync(from, (err, files) => {
+				fs.mkdir(to, {recursive: true});
+				fs.readdir(from, (err, files) => {
 					files.forEach(fl => {
 						copy(path.join(from, fl), path.join(to, fl));
 					});
