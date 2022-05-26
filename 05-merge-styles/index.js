@@ -1,14 +1,14 @@
 const fs = require('fs');
 const path = require('path');
-let data = "";
+let styles = "";
 
-fs.readdir(path.join(__dirname, "styles"), {withFileTypes: true}, (err, files) => {
-	files.forEach(file => {
+(async function() {
+	const files = await fs.promises.readdir(path.join(__dirname, "styles"), {withFileTypes: true});
+	for(let file of files) {
 		if(file.isFile() && path.extname(file.name) == ".css"){
-			var stream = fs.createReadStream(path.join(__dirname,"styles",file.name),"utf-8");
-			stream.on('data', chunk => data += chunk);
-			stream.on('end', () => fs.promises.writeFile(path.join(__dirname, "project-dist", "bundle.css"), data));
+			var data = await fs.promises.readFile(path.join(__dirname,"styles",file.name),"utf-8");
+			styles += data;
 		}
-	});
-});
-
+	}
+	fs.promises.writeFile(path.join(__dirname, "project-dist", "bundle.css"), styles);	
+})();
