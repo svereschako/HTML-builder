@@ -5,15 +5,23 @@ let components = {};
 let data = "";
 let styles = "";
 
-fs.promises.mkdir(path.join(__dirname,"project-dist"), {recursive: true});
-const stream = fs.createReadStream(path.join(__dirname,"template.html"),"utf-8");
-stream.on('data', chunk => data += chunk);
-stream.on('end', () => {
-	(async function () {
-		await load();
-		replace();
-	})();
-});
+async function createDir() {  
+  try {
+    const createDir = await fs.promises.mkdir(path.join(__dirname,"project-dist"), {recursive: true});
+    console.log(`Done: ${createDir}`);
+  } catch (err) {
+    console.error(err.message);
+  }
+}
+
+function readTemplate() {
+  const stream = fs.createReadStream(path.join(__dirname,"template.html"),"utf-8");
+  stream.on('data', chunk => data += chunk);
+  stream.on('end', async () => {	
+  		await load();
+  		replace();	
+  });
+}
 
 function replace() {
 	var ndata = data.replace(re, function(match){
@@ -33,7 +41,7 @@ async function load() {
 	}
 }
 
-(async function() {
+async function createCss() {
 	const files = await fs.promises.readdir(path.join(__dirname, "styles"), {withFileTypes: true});
 	for(let file of files) {
 		if(file.isFile() && path.extname(file.name) == ".css"){
@@ -42,7 +50,7 @@ async function load() {
 		}
 	}
 	fs.promises.writeFile(path.join(__dirname, "project-dist", "style.css"), styles);	
-})();
+}
 
 async function copyDir(src,dest) {
     const entries = await fs.promises.readdir(src, {withFileTypes: true});
@@ -57,4 +65,25 @@ async function copyDir(src,dest) {
         }
     }
 }
-copyDir(path.join(__dirname,"assets"),path.join(__dirname,"project-dist", "assets"));
+
+async function deleteFolder() {
+  try {
+    const stats = await fs.promises.stat(path.join(__dirname, "project-dist"));
+    if (stats.isDirectory()) {
+      console.log('Folder already exists. Rewriting...');
+      await fs.promises.rm(path.join(__dirname, "project-dist"), { recursive: true });
+    }
+  } catch (err) {
+    console.log('Folder does not exist. Creating new folder...');
+  }  
+}
+
+async function execute() {    
+  await deleteFolder();
+  await createDir();
+  readTemplate();
+  await copyDir(path.join(__dirname, "assets"),path.join(__dirname, "project-dist", "assets"));
+  await createCss();
+}
+
+execute();
