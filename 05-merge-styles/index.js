@@ -2,7 +2,7 @@ const fs = require('fs');
 const path = require('path');
 let styles = "";
 
-(async function() {
+async function createBundle () {
 	const files = await fs.promises.readdir(path.join(__dirname, "styles"), {withFileTypes: true});
 	for(let file of files) {
 		if(file.isFile() && path.extname(file.name) == ".css"){
@@ -11,4 +11,6 @@ let styles = "";
 		}
 	}
 	fs.promises.writeFile(path.join(__dirname, "project-dist", "bundle.css"), styles);	
-})();
+}
+
+createBundle();
